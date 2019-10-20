@@ -1,5 +1,5 @@
-// Based on the following article:
-// Effects Without Monads: Non-determinism — Back to the Meta Language
+// Based on the following article from Oleg Kiselyov:
+// Effects Without Monads: Non-determinism — Back to the Meta Language.
 // https://arxiv.org/abs/1905.06544 (see also http://okmij.org/ftp/tagless-final/nondet-effect.html)
 // Comments between double quotes (`“` and `”`) are verbatim citations from the article.
 
@@ -257,7 +257,7 @@ trait PermExamples extends Perm with NonDeterminismExamples{
 
 // Semantics can be added by fixing the abstract type members `IntExpr` and `IntListExpr`
 // and implementing the operations accordingly:
-trait NonDeterminismList extends NonDeterminism {
+trait NonDeterminismSet extends NonDeterminism {
   
   /** 
     * In this interpreter, `IntListExpr` is the list of all the choices that a list
@@ -287,10 +287,10 @@ trait NonDeterminismList extends NonDeterminism {
   def (xs: IntListExpr) ||| (ys: IntListExpr) = xs union ys
 }
 
-// We can apply the `NonDeterminismList` interpreter to the expressions defined
+// We can apply the `NonDeterminismSet` interpreter to the expressions defined
 // in the `Perm` trait as follows:
 
-object PermList extends Perm with NonDeterminismList {
+object PermList extends Perm with NonDeterminismSet {
 
   println(perm(int(1) :: int(2) :: int(3) :: nil)) // Set(List(1, 2, 3), List(1, 3, 2), List(3, 2, 1), List(3, 1, 2), List(2, 3, 1), List(2, 1, 3))
   println(perm(list(4 :: 5 :: 6 :: Nil))) // Set(List(5, 6, 4), List(6, 4, 5), List(5, 4, 6), List(4, 5, 6), List(4, 6, 5), List(6, 5, 4))
@@ -301,7 +301,7 @@ object PermList extends Perm with NonDeterminismList {
 // “Although the `NonDeterminism` DSL is meant for non-deterministic computations, it is not
 // as generic and expressive as it could be. For example, the `NonDeterminism` trait does
 // not define the general monadic ‘flatMap’ and ‘pure’ operations (they were not needed for
-// the task at hand). Implementations of `NonDeterminism`, such as `NonDeterminismList`, may
+// the task at hand). Implementations of `NonDeterminism`, such as `NonDeterminismSet`, may
 // support these operations and even use them internally – yet not offer them to the DSL
 // programmer. The lack of generality has an upside: the `NonDeterminism` DSL admits
 // implementations that do not support ‘flatMap’ and ‘pure’ at all. The following presents
@@ -516,8 +516,8 @@ object Staging {
     val cubeCode: Expr[Double => Double] = '{ (x: Double) => ${powerCode(3, '{x})} }
     val fourthCode: Expr[Double => Double] = '{ (x: Double) => ${powerCode(4, '{x})} }
 
-    println(cubeCode.show) // (x: scala.Double) => x * x * x
-    println(fourthCode.show) // (x: scala.Double) => x * x * x * x
+    println(cubeCode.show) // (x: Double) => x * x * x
+    println(fourthCode.show) // (x: Double) => x * x * x * x
   }
 
   // The `run` operation turns an `Expr[A]` into an `A` by evaluating its code
@@ -546,7 +546,7 @@ trait NonDeterminismCode(given QuoteContext) extends NonDeterminism {
   //
   // We therefore incorporate some analysis (typically called ‘binding-time analysis’)
   // into the DSL compiler, which calls for the more elaborate semantic domain for
-  // non-deterministic list expressions:
+  // non-deterministic list expressions:”
 
   /**
     * “Distinguishes the case of statically knowing the number of non-deterministic choices
@@ -624,6 +624,16 @@ trait NonDeterminismCode(given QuoteContext) extends NonDeterminism {
     case (Unknown(expr1), Unknown(expr2)) => Unknown('{ $expr1 ::: $expr2 })
   }
 
+  // “This DSL compiler would not have been possible had the `NonDeterminism` DSL required the monadic interface.
+  // Indeed, if it were, it would have had to support the following operation:
+  //
+  // def (fa: Expr[A]) flatMap[A, B](f: A => Expr[B]): Expr[B]
+  //
+  // The second argument of `flatMap` is a function that takes the value meant to be produced by the code supplied
+  // as the first argument to `flatMap`. The generated code, generally, cannot be run until the generation process
+  // is finished: for example, because the code may contain free variables, to be bound later in the process.
+  // Therefore, `flatMap` cannot in general apply its second argument. To put itanother way, code generation cannot,
+  // generally, be influenced by the result of the already built code.”
 }
 
 object PermCode {
