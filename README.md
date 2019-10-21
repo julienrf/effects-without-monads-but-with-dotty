@@ -2,8 +2,6 @@ Based on the following article from Oleg Kiselyov:
 [Effects Without Monads: Non-determinism — Back to the Meta Language](https://arxiv.org/abs/1905.06544).
 See also http://okmij.org/ftp/tagless-final/nondet-effect.html
 
-The project is written in a single [literate program](/src/main/scala/effects/Main.scala).
-
 ---
 
 The paper does not really present a novel way to deal with effects, but uses this problem as a starting
@@ -17,3 +15,5 @@ evaluating them (abstract interpretation), and generating (possibly more efficie
 The paper uses MetaOCaml to implement these ideas. My goal was to see how this code would translate to
 idiomatic Scala 3 code, using enums, parameterized traits, extension methods, and staging (for run-time
 code generation).
+
+The project is written as a single [literate program](/src/main/scala/effects/Main.scala).
