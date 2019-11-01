@@ -510,14 +510,15 @@ object Staging {
     def powerCode(exponent: Int, x: Expr[Double]): Expr[Double] =
       if exponent == 0          then '{ 1 }
       else if exponent == 1     then x
-      else if exponent % 2 == 0 then '{ ${powerCode(exponent / 2, x)} * ${powerCode(exponent / 2, x)} }
+      else if exponent == 2     then '{ $x * $x }
+      else if exponent % 2 == 0 then '{ val y = ${powerCode(exponent / 2, x)}; y * y }
       else                           '{ $x * ${powerCode(exponent - 1, x)} }
 
-    val cubeCode: Expr[Double => Double] = '{ (x: Double) => ${powerCode(3, '{x})} }
+    val cubeCode: Expr[Double => Double]   = '{ (x: Double) => ${powerCode(3, '{x})} }
     val fourthCode: Expr[Double => Double] = '{ (x: Double) => ${powerCode(4, '{x})} }
 
-    println(cubeCode.show) // (x: Double) => x * x * x
-    println(fourthCode.show) // (x: Double) => x * x * x * x
+    println(cubeCode.show)   // (x: Double) => x * x * x
+    println(fourthCode.show) // (x: Double) => { val y = x * x; y * y }
   }
 
   // The `run` operation turns an `Expr[A]` into an `A` by evaluating its code
